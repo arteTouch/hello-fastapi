@@ -13,7 +13,7 @@ class Category(CustomBaseModel):
 
 class Task(CustomBaseModel):
     description: Optional[str] = Field('Does not contain any description', min_length=10)
-    status: bool = Field(is_bool=True)
+    is_active: bool = Field(is_bool=True)
     user: User
     category: Category
     tags: Optional[List[str]] = []
