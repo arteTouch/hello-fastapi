@@ -1,14 +1,31 @@
-from fastapi import FastAPI, APIRouter, Query
+from fastapi import FastAPI, APIRouter, Query, Request, Depends
 from todo import todo_router
 from upload_router import uploads_router
+from user import user_router
+from category import category_router
+from fastapi.templating import Jinja2Templates
+from db import db_qry
+from pymongo import MongoClient
+from db.db import get_db
+
+templates = Jinja2Templates(directory='templates')
 
 app = FastAPI()
 router = APIRouter()
 
-@router.get('/page')
-def page(pg: int=Query(1, gt=1, lt=20), size: int=Query(5, ge=5, le=20)):
-    return {'page': pg, 'size': size}
+@router.get('/page/')
+def index(request: Request, db: MongoClient = Depends(get_db)):
+    todo_list = db_qry.todos(db)
+    for todo in todo_list:
+        todo['category_id'] = db_qry.categories(db, id=todo['category'])['_id']
+        todo['category'] = db_qry.categories(db, id=todo['category'])['name']
+    category_list = db_qry.categories(db)
+    return templates.TemplateResponse('todo/index.html', {'request': request,
+                                                          'todo_list': todo_list,
+                                                          'category_list': category_list})
 
 app.include_router(router)
 app.include_router(todo_router, prefix='/todos')
 app.include_router(uploads_router, prefix='/uploads')
+app.include_router(user_router, prefix='/user')
+app.include_router(category_router, prefix='/category')

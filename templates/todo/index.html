@@ -1,0 +1,150 @@
+{% extends "todo/main.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<table>
+        <tr>
+            <td>Name</td>
+            <td>Category</td>
+            <td>Status</td>
+            <td>Options</td>
+        </tr>
+        {% for task in todo_list %}
+            <tr>
+                <td>{{ task.name }}</td>
+                <td>{{ task.category }}</td>
+                <td>
+                    {% if task.is_active %}
+                        Pending
+                    {% else %}
+                        Completed
+                    {% endif %}
+                </td>
+                <td>
+                    <button id="edit" data-pk="{{ task._id }}"
+                                      data-name="{{ task.name }}"
+                                      data-description="{{ task.description }}"
+                                      data-status="{{ task.is_active }}"
+                                      data-category-id="{{ task.category_id }}">
+                        Edit
+                    </button>
+                    <button id="delete" data-pk="{{ task._id }}">Delete</button>
+                    <button id="editStatus" data-pk="{{ task._id }}">Mark as {{ 'completed' if task.is_active else 'pending' }}</button>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+    
+    <div class="container" id="createForm">
+        <label for="">Name: </label>
+        <input type="text" name="Name">
+        
+        <label for="">Description: </label>
+        <textarea name="Description" id="" cols="30" rows="10"></textarea>
+    
+        <label for="">Category: </label>
+        <select name="Category" id="">
+            {% for category in category_list %}
+                <option value="{{ category._id }}">{{ category.name }}</option>
+            {% endfor %}
+        </select>
+    
+        <button id="createTask">Create task</button>
+    </div>
+
+    <div class="container" id="editForm" style="display: none;">
+        <label for="">Name: </label>
+        <input type="text" name="Name">
+        
+        <label for="">Description: </label>
+        <textarea name="Description" id="" cols="30" rows="10"></textarea>
+
+        <label for="">Category: </label>
+        <select name="Category" id="">
+            {% for category in category_list %}
+                <option value="{{ category._id }}">{{ category.name }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="hidden" type="text" name="Id" value="">
+        <input type="hidden" type="text" name="isActive" value="">
+
+        <button id="editTask">Edit task</button>
+    </div>
+    
+    <script>
+        document.querySelectorAll('#delete').forEach(button => {
+            button.addEventListener('click', function() {
+                fetch('/todos/delete/' + this.dataset.pk, {
+                    method: 'DELETE'
+                }).then(location.reload());
+            })
+        })
+        
+        document.querySelectorAll('#editStatus').forEach(button => {
+            button.addEventListener('click', function() {
+                fetch('/todos/update-status/' + this.dataset.pk, {
+                    method: 'PUT'
+                }).then(location.reload());
+            })
+        })
+
+        document.querySelectorAll('#edit').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelector('#createForm').style.display = 'none';
+                document.querySelector('#editForm').style.display = 'block';
+
+                document.querySelector('#editForm input[name="Name"]').value = this.dataset.name;
+                document.querySelector('#editForm textarea[name="Description"]').value = this.dataset.description;
+                document.querySelector('#editForm select[name="Category"]').value = this.dataset.categoryId;
+                document.querySelector('#editForm input[name="Id"]').value = this.dataset.pk;
+                document.querySelector('#editForm input[name="isActive"]').value = this.dataset.status;
+            })
+        })
+
+        document.getElementById('editTask').addEventListener('click', function() {
+            let data = {
+                "name": document.querySelector('#editForm input[name="Name"]').value,
+                "description": document.querySelector('#editForm textarea[name="Description"]').value,
+                "category": document.querySelector('#editForm select[name="Category"]').value,
+                "is_active": document.querySelector('#editForm input[name="isActive"]').value
+            };
+            
+            const id = document.querySelector('#editForm input[name="Id"]').value;
+
+            fetch('/todos/update/' + id, {
+                method: 'PUT',
+                body: JSON.stringify(data),
+                headers: {'Content-Type': 'application/json'}
+            }).then(res => res.json()).then(data => {
+                location.reload();
+            });
+
+            document.querySelector('#editForm').style.display = 'none';
+            document.querySelector('#createForm').style.display = 'block';
+        })
+
+        document.getElementById('createTask').addEventListener('click', function() {
+            let data = {
+                "name": document.querySelector('input[name="Name"]').value,
+                "description": document.querySelector('textarea[name="Description"]').value,
+                "category": document.querySelector('select[name="Category"]').value
+            };
+
+            fetch('/todos/create/', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {'Content-Type': 'application/json'}
+            }).then(res => res.json()).then(data => {
+                location.reload();
+            });
+        })
+    </script>
+{% endblock %}
+
+{% block footer %}
+    Spesial footer for index.html
+    {{ super() }}
+{% endblock %}
