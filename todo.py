@@ -2,11 +2,15 @@ from fastapi import APIRouter, Response, status, Depends
 from db.models import Task, User, Category
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from typing_extensions import Annotated
 from db.db import get_db
-from db import db_qry
-from db import alter_data
+from db import db_qry, alter_data
+from modules import auth_tools
+
 
 todo_router = APIRouter()
+
+Token = Annotated[str, Depends(auth_tools.api_key_token)]
 
 @todo_router.post('/create')
 def post(response: Response, task: Task, db: MongoClient = Depends(get_db)):
@@ -18,7 +22,10 @@ def post(response: Response, task: Task, db: MongoClient = Depends(get_db)):
     return False
 
 @todo_router.get('/read/all')
-def get(response: Response, db: MongoClient = Depends(get_db)):
+def get(response: Response, token: Token, db: MongoClient = Depends(get_db)):
+    if token != auth_tools.secret:
+        response.status_code = status.HTTP_403_FORBIDDEN
+        return False
     todo_list = db_qry.todos(db)
     if len(todo_list) == 0:
         response.status_code = status.HTTP_404_NOT_FOUND

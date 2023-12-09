@@ -1,4 +1,6 @@
 from fastapi import FastAPI, APIRouter, Query, Request, Depends
+from fastapi.middleware.cors import CORSMiddleware
+import time
 from todo import todo_router
 from upload_router import uploads_router
 from user import user_router
@@ -12,6 +14,23 @@ templates = Jinja2Templates(directory='templates')
 
 app = FastAPI()
 router = APIRouter()
+
+origins = []
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=['POST'],
+    allow_headers=[],
+)
+
+@app.middleware('http')
+async def add_processing_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    response.headers['X-Processing-Time'] = str(time.time() - start_time)
+    return response
 
 @router.get('/page/')
 def index(request: Request, db: MongoClient = Depends(get_db)):
