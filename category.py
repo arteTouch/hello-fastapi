@@ -2,6 +2,8 @@ from fastapi import APIRouter, Response, status, Depends
 from db.models import Category
 from pymongo import MongoClient
 from db import db_qry, alter_data
+from db.db import get_db
+from todo import DB
 
 
 DB_URL = 'mongodb://localhost:27017'
@@ -10,9 +12,7 @@ DB_NAME = 'HELLO'
 category_router = APIRouter()
 
 @category_router.post('/create')
-def post(response: Response, category: Category):
-    client = MongoClient(DB_URL)
-    db = client[DB_NAME]
+def post(response: Response, category: Category, db: DB):
     category = dict(category)
     if db_qry.categories(db, category['name']) is None:
         alter_data.insert_category(db,category)
@@ -22,10 +22,7 @@ def post(response: Response, category: Category):
     return False
 
 @category_router.get('/read/all')
-def get(response: Response):
-    response.status_code = status.HTTP_200_OK
-    client = MongoClient(DB_URL)
-    db = client[DB_NAME]
+def get(response: Response, db: DB):
     cursor = db_qry.categories(db)
     category_list = []
     for doc in cursor:

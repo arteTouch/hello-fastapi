@@ -9,6 +9,8 @@ def todos(db, name=None, id=None):
         query['_id'] = ObjectId(id)
     if len(query) > 0:
         res = db.todos.find_one(query)
+        if res is not None:
+            res['_id'] = str(res['_id'])
     else:
         cursor = db.todos.find()
         res = []
@@ -17,7 +19,7 @@ def todos(db, name=None, id=None):
             res.append(doc)
     return res
 
-def users(db, id=None, name=None):
+def users(db, name=None, id=None):
     query = dict()
     if id is not None:
         query['_id'] = ObjectId(id)
@@ -25,6 +27,8 @@ def users(db, id=None, name=None):
         query['name'] = name
     if len(query) > 0:
         res = db.user.find_one(query)
+        if res is not None:
+            res['_id'] = str(res['_id'])
     else:
         cursor = db.user.find()
         res = []
@@ -41,6 +45,8 @@ def categories(db, id=None, name=None):
         query['name'] = name
     if len(query) > 0:
         res = db.category.find_one(query)
+        if res is not None:
+            res['_id'] = str(res['_id'])
     else:
         cursor = db.category.find()
         res = []

@@ -25,12 +25,12 @@ def delete_task(db, id):
     res = db.todos.delete_one({'_id': id})
     return res
 
-def insert_user(db, task):
-    task = dict(task)
-    res = db.user.insert_one(task)
+def insert_user(db, user):
+    user = dict(user)
+    res = db.user.insert_one(user)
     return res
 
-def insert_category(db, task):
-    task = dict(task)
-    res = db.category.insert_one(task)
+def insert_category(db, category):
+    category = dict(category)
+    res = db.category.insert_one(category)
     return res
